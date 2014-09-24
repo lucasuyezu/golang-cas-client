@@ -14,7 +14,7 @@ How to request a Service Ticket
       username := "my-user"
       password := "my-password"
       service := "service.company.com"
-      fmt.Println("ST is", cas.RequestST(username, password, service))
+      fmt.Println("ST is", cas.RequestST(cas_server_url, username, password, service))
     }
 
 TODO
