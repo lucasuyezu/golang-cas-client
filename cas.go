@@ -1,45 +1,67 @@
 package cas
 
-import "crypto/tls"
-import "fmt"
-import "io/ioutil"
-import "net/http"
-import "net/url"
+import (
+	"crypto/tls"
+	"errors"
+	"io/ioutil"
+	"net/http"
+	"net/url"
+)
 
-func RequestST(cas_server_url, username, password, service string) string {
-	response := postFormData(cas_server_url + "/v1/tickets",
-		url.Values{"username": {username}, "password": {password}})
-	defer response.Body.Close()
-
-	tgtLocation := response.Header.Get("Location")
-
-	stResponse := postFormData(tgtLocation, url.Values{"service": {service}})
-	defer stResponse.Body.Close()
-
-	st, err := ioutil.ReadAll(stResponse.Body)
-	if err != nil {
-		fmt.Print("Error reading ST response body:")
-		fmt.Println(err)
-	}
-
-	if stResponse.StatusCode != 200 {
-		fmt.Println("ST response should be 200 but is", stResponse.StatusCode)
-	}
-
-	return string(st)
+type CasConfig struct {
+	Server, Username, Password string
 }
 
-func postFormData(url string, formData url.Values) *http.Response {
-	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	client := &http.Client{Transport: transport}
-	response, err := client.PostForm(url, formData)
+func New(server, username, password string) CasConfig {
+	return CasConfig{server, username, password}
+}
 
+func (self CasConfig) RequestServiceTicket(service string) (string, error) {
+	tgt, err := self.requestTgtLocation()
 	if err != nil {
-		fmt.Print("Error on POST ", url, "with form data", formData)
-		fmt.Println(err)
+		return "", err
 	}
 
-	return response
+	return self.getServiceTicket(tgt, service)
+}
+
+func (self CasConfig) requestTgtLocation() (string, error) {
+	params := url.Values{"username": {self.Username}, "password": {self.Password}}
+	response, err := postFormData(self.Server+"/v1/tickets", params)
+	defer response.Body.Close()
+	if err != nil {
+		return "", err
+	}
+
+	return response.Header.Get("Location"), nil
+}
+
+func (self CasConfig) getServiceTicket(tgt, service string) (string, error) {
+	response, err := postFormData(tgt, url.Values{"service": {service}})
+	if err != nil {
+		return "", err
+	}
+
+	serviceTicket, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return "", err
+	}
+
+	if response.StatusCode != 200 {
+		return "", errors.New("ST response should be 200 but is: " + string(response.StatusCode))
+	}
+
+	return string(serviceTicket), nil
+}
+
+func postFormData(url string, formData url.Values) (*http.Response, error) {
+	transport := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+	client := &http.Client{Transport: transport}
+
+	response, err := client.PostForm(url, formData)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
 }
