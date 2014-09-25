@@ -13,7 +13,7 @@ How to request a Service Ticket
       cas := cas.New("https://server", "user", "pass")
       ticket, _ := cas.CreateServiceTicket("service")
 
-      fmt.Println("ST is", ticket)
+      fmt.Println("ST is ", ticket)
     }
 
 TODO

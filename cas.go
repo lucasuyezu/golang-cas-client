@@ -16,8 +16,8 @@ func New(server, username, password string) CasConfig {
 	return CasConfig{server, username, password}
 }
 
-func (self CasConfig) CreateServiceTicket(service string) (string, error) {
-	tgt, err := self.getTgtLocation()
+func (self CasConfig) RequestServiceTicket(service string) (string, error) {
+	tgt, err := self.requestTgtLocation()
 	if err != nil {
 		return "", err
 	}
@@ -25,7 +25,7 @@ func (self CasConfig) CreateServiceTicket(service string) (string, error) {
 	return self.getServiceTicket(tgt, service)
 }
 
-func (self CasConfig) getTgtLocation() (string, error) {
+func (self CasConfig) requestTgtLocation() (string, error) {
 	params := url.Values{"username": {self.Username}, "password": {self.Password}}
 	response, err := postFormData(self.Server+"/v1/tickets", params)
 	defer response.Body.Close()
