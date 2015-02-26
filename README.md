@@ -10,7 +10,7 @@ How to request a Service Ticket
     )
 
     func main() {
-      cas := cas.New("https://server", "user", "pass")
+      cas := cas.NewClient("https://server", "user", "pass")
       ticket, _ := cas.RequestServiceTicket("service")
 
       fmt.Println("ST is ", ticket)
