@@ -1,0 +1,4 @@
+server: https://localhost
+service: localhost
+username: username
+password: password 
