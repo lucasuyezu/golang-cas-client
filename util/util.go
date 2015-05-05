@@ -3,6 +3,7 @@ package util
 import (
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -33,7 +34,8 @@ func GetResponseBody(url string, params map[string]string) (string, error) {
 	}
 
 	if response.StatusCode != 200 {
-		return "", errors.New("response should be 200 but is: " + string(response.StatusCode))
+		errMsg := fmt.Sprintf("response should be 200 but is: %d", response.StatusCode)
+		return "", errors.New(errMsg)
 	}
 
 	body, err := ioutil.ReadAll(response.Body)
